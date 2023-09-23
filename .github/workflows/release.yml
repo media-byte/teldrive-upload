@@ -18,10 +18,24 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version: 1.21
+
+      - name: Create Tag
+        id: tag
+        run: |
+          # See https://docs.github.com/en/get-started/using-git/dealing-with-special-characters-in-branch-and-tag-names
+          TAG=v$(date -Iseconds | sed 's/[T:\+]/-/g')-${{ matrix.os }}
+          echo "$TAG"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          git tag -a $TAG -m "Published version $TAG" ${GITHUB_SHA}
+          git push origin $TAG
+        env:
+            GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v4
         with:
